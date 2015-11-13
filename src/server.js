@@ -5,7 +5,10 @@ var endpoints = require("./endpoints/module.js");
 var app = express();
 var router = express.Router();
 var bodyParser = require('body-parser');
+var rawBodySaver = require('./helpers/request').middleware;
 
+// Add a global raw body saving middleware
+app.use(rawBodySaver);
 // Add a global JSON parsing middleware
 app.use(bodyParser.json());
 
