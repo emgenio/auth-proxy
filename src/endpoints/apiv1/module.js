@@ -8,7 +8,7 @@ var router = require('express').Router();
 // router.use(ACL.jwt.decrypt());
 
 // main_router.use('/users', require('./users')(acl_controller));
-main_router.use('/interface', require('./interface')());
+main_router.use('/service', require('./service')());
 main_router.use('/test', require('./test')());
 router.use(main_router);
 // router.use('/account/:account', main_router, require('./accounts')(acl_controller));

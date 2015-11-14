@@ -1,8 +1,6 @@
 var YAML = require('yamljs');
 var cli = require('./cli');
 var config = {};
-global.log = require('loglevel');
-log.setDefaultLevel(log.levels.ERROR);
 
 var startupErrors = [];
 
