@@ -1,0 +1,5 @@
+proxy:
+    port: 8080
+
+    storage: memory
+    jsonErrors: true

@@ -37,5 +37,10 @@ try {
     process.exit(1);
 }
 
+// Overide config file with cli args
+if (cli.options.json) {
+    config.proxy.jsonErrors = cli.options.json;
+}
+
 
 module.exports = config;

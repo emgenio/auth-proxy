@@ -9,6 +9,7 @@ var cli = commandLineArgs([
         description: 'Location of the Auth Proxy config.yaml file'
     },
     { name: 'loglevel', alias: 'v', type: Boolean, multiple:true },
+    { name: 'json', alias: 'e', type: Boolean, description: 'Return errors with JSON'}
 ]);
 
 module.exports  = {cli: cli, options: cli.parse()}

@@ -2,7 +2,7 @@
  * This acl function helps to manage authentication
  * when passed a simple role table.
  */
-
+var errorSend = require('./helpers/misc').errorSend;
 
 /**
  * Parses the acl object into a two dimentional matrix for easier parsing
@@ -64,6 +64,25 @@ var ACL = function (acl_table) {
 
 };
 
+/**
+ * Allows instantiated ACL from a table returned by getTable
+ * @param  {[type]} parsed_table [description]
+ * @return {[type]}              [description]
+ */
+ACL.createInstance = function (parsed_table) {
+    var instance = new ACL();
+    instance._role_table = parsed_table;
+    return instance;
+}
+
+/**
+ * [getTable description]
+ * @return {[type]} [description]
+ */
+ACL.prototype.getTable = function getTable() {
+    return this._role_table;
+}
+
 
 /**
  * Checks if a role is in a role chain.
@@ -108,7 +127,7 @@ ACL.prototype.allow = function (role) {
         // If there's no roles associated with the key, we're not
         // logged in.
         if (!req._key_roles) {
-            return res.status(403).json({
+            return errorSend(res, 403, {
                 error: {
                     status: 'Unauthorized',
                     reason: 'API Key Missing'
@@ -122,7 +141,7 @@ ACL.prototype.allow = function (role) {
             // and that the account we're looking at is the same one
             // we're authorized for.
             if (!req._su_key && req._key_account != req.params.account) {
-                return res.status(403).json({
+                return errorSend(res, 403, {
                     error: {
                         status: 'Unauthorized',
                         reason: 'This key cannot access this account'
@@ -136,7 +155,7 @@ ACL.prototype.allow = function (role) {
         // Finally confirm the API key in use actually has the role
         // we're looking for
         if (!self.hasClearance(req._key_roles, role)) {
-            return res.status(403).json({
+            return errorSend(res, 403, {
                 error: {
                     status: 'Unauthorized',
                     reason: 'Not authorized to access this endpoint'
@@ -196,7 +215,7 @@ ACL.jwt.decrypt = function () {
         var maximum_session = new Date(now + (this.session_length * 60000));
         var token_generated = new Date(token_payload.when);
         if (token_generated > maximum_session) {
-            return res.status(440).json({
+            return errorSend(res, 440, {
                 error: {
                     status: "Unauthorized",
                     message: "Token expired"
@@ -206,7 +225,7 @@ ACL.jwt.decrypt = function () {
         
         // Check token header
         if (!token_header.hasOwnProperty('alg') || !token_header.hasOwnProperty('typ')) {
-            return res.status(403).json({
+            return errorSend(res, 403, {
                 error: {
                     status: "Unauthorized",
                     message: "Invalid token header"
@@ -215,7 +234,7 @@ ACL.jwt.decrypt = function () {
         }
 
         if (token_header.alg != "HS512" || token_header.typ != "JWT") {
-            return res.status(403).json({
+            return errorSend(res, 403, {
                 error: {
                     status: "Unauthorized",
                     message: "Unsupported Algorithm or Token type"
@@ -226,7 +245,7 @@ ACL.jwt.decrypt = function () {
         // Check token payload
         if (!token_payload.hasOwnProperty('_key_account')
             && !token_payload.hasOwnProperty('_su_key')) {
-            return res.status(403).json({
+            return errorSend(res, 403, {
                 error: {
                     status: "Unauthorized",
                     message: "Invalid Token"
@@ -265,7 +284,7 @@ ACL.jwt.decrypt = function () {
             req._key_roles = token_payload._key_roles;
             return next();
         } else {
-            return res.status(403).json({
+            return errorSend(res, 403, {
                 error: {
                     status: "Unauthorized",
                     message: "Unable to verify token signature"

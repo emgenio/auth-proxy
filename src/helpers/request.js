@@ -1,4 +1,33 @@
 /**
+ * Routes traffic through to backends after
+ * confirming eligibilbity.
+ * @param  {[type]}   req  [description]
+ * @param  {[type]}   res  [description]
+ * @param  {Function} next [description]
+ * @return {[type]}        [description]
+ */
+var serviceRouter = function serviceRouter(req, res, next) {
+    var path = req.route.path;
+    var routemap = storage.get('routemap');
+    var routeMeta;
+
+    if (routeMeta = routemap.get(path)) {
+        var baseUri = storage.find('services.' + routeMeta.service);
+        var uriExtract = require('url').parse(baseUri);
+        var isSSL = uriExtract.protocol === 'https:';
+        var roles = storage.find('roleMap.' + routeMeta.service);
+        var acl = require('../acl').createInstance(roles);
+
+
+        return acl.allow(routeMeta.role)(req, res,
+            makeRequest.bind(this, req, res, uriExtract.host, uriExtract.port, isSSL)
+        );
+    }
+
+    return next()
+}
+
+/**
  * Saves the chunks of body to the rawBody variable
  * @param  {request} request The expressjs proxy request
  * @param  {string} chunk   Chunk of request body data
@@ -39,40 +68,44 @@ var handleError = function (err) {
     log.warn('Failed to process a request: ' + err);
 }
 
-module.exports = {
-    /**
-     * Takes a req and res object from express and forwards a
-     * request to the destination host.
-     * @param  {object} req      The express request object
-     * @param  {object} res      The express response object
-     * @param  {string} destHost The destination host to 
-     * forward the request to.
-     * @param  {string} destPort The destination port
-     * @return {void}
-     */
-    request: function makeRequest (req, res, destHost, destPort, isSSL) {
-        if (isSSL) {
-            var request = require('https').request;
-            var protocol = 'https:';
-        } else {
-            var request = require('http').request;
-            var protocol = 'http:';
-        }
 
-        
-        var options = {
-            hostname: destHost,
-            port: destPort || 80, // Actually handled by node for us either way
-            method: req.method,
-            path: req.path,
-            headers: req.headers,
-            protocol: protocol
-        };
-        clientReq = request(options, forwardResponse.bind(this, res));
-        clientReq.on('error', handleError);
-        clientReq.write(req.rawBody);
-        clientReq.end();
-    },
+/**
+ * Takes a req and res object from express and forwards a
+ * request to the destination host.
+ * @param  {object} req      The express request object
+ * @param  {object} res      The express response object
+ * @param  {string} destHost The destination host to 
+ * forward the request to.
+ * @param  {string} destPort The destination port
+ * @return {void}
+ */
+var makeRequest = function makeRequest (req, res, destHost, destPort, isSSL) {
+    if (isSSL) {
+        var request = require('https').request;
+        var protocol = 'https:';
+    } else {
+        var request = require('http').request;
+        var protocol = 'http:';
+    }
+
+    
+    var options = {
+        hostname: destHost,
+        port: destPort || 80, // Actually handled by node for us either way
+        method: req.method,
+        path: req.path,
+        headers: req.headers,
+        protocol: protocol
+    };
+    clientReq = request(options, forwardResponse.bind(this, res));
+    clientReq.on('error', handleError);
+    clientReq.write(req.rawBody);
+    clientReq.end();
+};
+
+module.exports = {
+    
+    request: makeRequest,
 
     /**
      * Simply logs request chunks to "rawBody"
@@ -100,5 +133,7 @@ module.exports = {
             };
         }
         return false;
-    }
+    },
+
+    serviceRouter: serviceRouter
 }
