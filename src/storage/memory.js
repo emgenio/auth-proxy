@@ -18,11 +18,11 @@ memory.prototype.setStore = function setStore (object) {
     return true;
 };
 
-memory.prototype.getStore = function getStore() {
+memory.prototype.getStore = function getStore () {
     return this._store;
 };
 
-memory.prototype.get = function (key) {
+memory.prototype.get = function get (key) {
     if (this._store.hasOwnProperty(key)) {
         return this._store[key];
     }
@@ -30,12 +30,36 @@ memory.prototype.get = function (key) {
     return;
 };
 
-memory.prototype.set = function (key, value) {
+memory.prototype.set = function set (key, value) {
     if (toString.call(value) == '[object Object]' && value.name != 'memory') {
         value = memory.createInstance(value);
     }
     return this._store[key] = value;
 };
+
+memory.prototype.dotSet = function dotSet (key, value) {
+    var dotFindArray = key.split('.');
+    
+    if (dotFindArray.length == 1) {
+        this.set(key, value);
+    } else {
+        var a = dotFindArray.unshift();
+        var current = this.get(a);
+        var key = dotFindArray.join('.');
+
+        if (current == undefined) {
+            current = this.set(a, {});
+        }
+
+        if (toString.call(current) == '[object Object]' && current.name == 'memory') {
+            return current.dotSet(key, value);
+        } else if (
+            toString.call(current) == '[object Object]' 
+            || toString.call(current) == '[object Array]') {
+            return current[dotFindArray.join('.')] = value;
+        }
+    }
+}
 
 memory.prototype.find = function find (dotFind) {
     var dotFindArray = dotFind.split('.');

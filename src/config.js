@@ -13,10 +13,12 @@ process.on('exit', function (code) {
     }
 })
 
+// Set the log level from CLI
 if (cli.options.loglevel) {
     log.setLevel(5 - cli.options.loglevel.length);
 }
 
+// Load config file from default location or as specified in CLI
 if (cli.options.config) {
     var file = cli.options.config;
 } else {

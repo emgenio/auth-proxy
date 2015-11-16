@@ -1,5 +1,5 @@
 /**
- * Storage constructor
+ * Storage constructor. Good place to recover data when process crashes
  * Takes no arguments.
  * @return {[type]} [description]
  */
@@ -30,14 +30,23 @@ generic.prototype.getStore = function getStore() {};
  * @param  {[type]} key [description]
  * @return {[type]}     [description]
  */
-generic.prototype.get = function (key) {};
+generic.prototype.get = function get (key) {};
 
 /**
  * Set the value of a property in the internal store object
  * @param {[type]} key   [description]
  * @param {[type]} value [description]
  */
-generic.prototype.set = function (key, value) {};
+generic.prototype.set = function set (key, value) {};
+
+/**
+ * Find an object similar to find and set the resulting object
+ * to the specified value
+ * @param  {[type]} key   [description]
+ * @param  {[type]} value [description]
+ * @return {[type]}       [description]
+ */
+generic.prototype.dotSet = function dotSet (key, value) {};
 
 /**
  * Using dot notation, try and find a key nested deeply
@@ -47,5 +56,11 @@ generic.prototype.set = function (key, value) {};
  * @return {[type]}         [description]
  */
 generic.prototype.find = function find (dotFind) {};
+
+/**
+ * Called before the process shuts down to save data
+ * @return {[type]} [description]
+ */
+generic.prototype.shutdown = function shutdown () {};
 
 module.exports = generic;

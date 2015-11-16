@@ -3,3 +3,9 @@ proxy:
 
     storage: memory
     jsonErrors: true
+    token:
+        usesHeader: true # Whether to look in the header for token
+        header: X-Auth # Header the token is passed through
+        json: token # JSON the token is passed through (usesHeader: false)
+        key: "HYS^Jhs729kas6J^3j36H6%#,82"
+        duration: 60 # Token expiration time in minutes

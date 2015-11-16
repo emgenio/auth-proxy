@@ -12,6 +12,7 @@ var rawBodySaver = require('./helpers/request').rawBody;
 app.use(rawBodySaver);
 // Add a global JSON parsing middleware
 app.use(bodyParser.json());
+app.use(require('./acl').jwt.decrypt());
 
 // Loop through endpoints and add them to the router.
 for(var key in endpoints) {

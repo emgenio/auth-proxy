@@ -174,9 +174,10 @@ ACL.prototype.allow = function (role) {
 
 // Initialise the JavaScript Web Token helper
 ACL.jwt = {
-    token_header: 'Authorization',
-    key: 'nzb1DjGlF3fh',
-    session_length: 60 // In minutes
+    token_header: config.proxy.token.header,
+    token_json: config.proxy.token.json,
+    key: config.proxy.token.key,
+    session_length: config.proxy.token.duration // In minutes
 };
 
 /**
@@ -186,7 +187,11 @@ ACL.jwt = {
  */
 ACL.jwt.decrypt = function () {
     return (req, res, next) => {
-        var token = req.get(this.token_header);
+        if (config.proxy.token.usesHeader) {
+            var token = req.get(this.token_header);
+        } else {
+            var token = req.get(this.token_json);
+        }
             
         // If we haven't got a token we just let things go
         // we're not sure at this stage wether ACL is in effect for

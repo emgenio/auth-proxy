@@ -23,15 +23,20 @@ var aquire = function aquire (require, posibilities) {
  * @param  {[type]} json   [description]
  * @return {[type]}        [description]
  */
-var errorSend = function errorSend (res, status, json) {
+var csend = function csend (res, status, json, message) {
     if (config.proxy.json) {
         res.status(status).json(json);
     } else {
-        res.status(status).send();
+        res.status(status).send(message);
     }
 }
 
 module.exports = {
     aquire: aquire,
-    errorSend: errorSend
+    errorSend: function (res, status, json) {
+        csend(res, status, json, json.error.message);
+    },
+    validSend: function (res, status, json) {
+        csend(res, status, json, json.data.message);
+    }
 }

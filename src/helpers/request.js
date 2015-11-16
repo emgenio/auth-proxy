@@ -8,18 +8,21 @@
  */
 var serviceRouter = function serviceRouter(req, res, next) {
     var path = req.route.path;
-    var routemap = storage.get('routemap');
-    var routeMeta;
+    var host = req.hostname.replace('.', '_');
+    var serviceData = storage.get(host);
+    var routeMap = serviceData.get('routeMap');
+    var role;
 
-    if (routeMeta = routemap.get(path)) {
-        var baseUri = storage.find('services.' + routeMeta.service);
+    // We don't traverse storage to get routemap because path could be regex
+    if (role = routeMap.get(path)) {
+        var baseUri = serviceData.get('baseUri');
         var uriExtract = require('url').parse(baseUri);
         var isSSL = uriExtract.protocol === 'https:';
-        var roles = storage.find('roleMap.' + routeMeta.service);
+        var roles = serviceData.get('roleTable');
         var acl = require('../acl').createInstance(roles);
 
 
-        return acl.allow(routeMeta.role)(req, res,
+        return acl.allow(role)(req, res,
             makeRequest.bind(this, req, res, uriExtract.host, uriExtract.port, isSSL)
         );
     }
