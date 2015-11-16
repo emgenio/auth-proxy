@@ -1,6 +1,11 @@
 {
   "name": "emgen-auth-proxy",
-  "version": "0.0.1-rc1",
+  "description": "A simple node-based auth microservice and reverse proxy",
+  "repository" : {
+    "type" : "git", 
+    "url" : "https://github.com/emgenio/auth-proxy.git"
+  },
+  "version": "0.0.1-rc2",
   "description": "",
   "main": "entrypoint.js",
   "scripts": {
@@ -16,5 +21,8 @@
     "express": "^4.13.3",
     "loglevel": "^1.4.0",
     "yamljs": "^0.2.4"
+  },
+  "bin": {
+    "eap": "./cli.js"
   }
 }

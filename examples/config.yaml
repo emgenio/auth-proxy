@@ -1,11 +1,17 @@
 proxy:
-    port: 8080
+    port: 3301 # Port to listen on
 
-    storage: memory
-    jsonErrors: true
+    storage: memory # Type of storage engine to use
+    jsonErrors: true # Return json Errors?
     token:
         usesHeader: true # Whether to look in the header for token
         header: X-Auth # Header the token is passed through
         json: token # JSON the token is passed through (usesHeader: false)
         key: "HYS^Jhs729kas6J^3j36H6%#,82"
-        duration: 60 # Token expiration time in minutes
+        duration: 60 # Token expiration time in minutes. 0 means forever.
+
+    api:
+        enabled: true # Whether the service and endpoint registration api should be enabled
+        allowedHosts: # Hosts the api listens to
+         - authproxy.emgen.io
+        testMode: false # Whether test endpoints should be enabled

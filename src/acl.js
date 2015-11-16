@@ -126,7 +126,7 @@ ACL.prototype.allow = function (role) {
 
         // If there's no roles associated with the key, we're not
         // logged in.
-        if (!req._key_roles) {
+        if (!req.key_roles) {
             return errorSend(res, 403, {
                 error: {
                     status: 'Unauthorized',
@@ -135,26 +135,9 @@ ACL.prototype.allow = function (role) {
             });
         }
 
-        // If we're making a call specific to an account
-        if (req.params.account) {
-            // Check to see if that we haven't got a super user key 
-            // and that the account we're looking at is the same one
-            // we're authorized for.
-            if (!req._su_key && req._key_account != req.params.account) {
-                return errorSend(res, 403, {
-                    error: {
-                        status: 'Unauthorized',
-                        reason: 'This key cannot access this account'
-                    }
-                });
-            }
-        } else {
-            req.params.account = req._key_account;
-        }
-
         // Finally confirm the API key in use actually has the role
         // we're looking for
-        if (!self.hasClearance(req._key_roles, role)) {
+        if (!self.hasClearance(req.key_roles, role)) {
             return errorSend(res, 403, {
                 error: {
                     status: 'Unauthorized',
@@ -162,7 +145,7 @@ ACL.prototype.allow = function (role) {
                 },
                 meta: {
                     details: 'Endpoint requires ' +role+ ' permission',
-                    authorized_for: req._key_roles
+                    authorized_for: req.key_roles
                 }
             });
         }
@@ -216,16 +199,18 @@ ACL.jwt.decrypt = function () {
         );
 
         // Check token expiry
-        var now = new Date();
-        var maximum_session = new Date(now + (this.session_length * 60000));
-        var token_generated = new Date(token_payload.when);
-        if (token_generated > maximum_session) {
-            return errorSend(res, 440, {
-                error: {
-                    status: "Unauthorized",
-                    message: "Token expired"
-                }
-            });
+        if (this.session_length !== 0) {
+            var now = new Date();
+            var maximum_session = new Date(now + (this.session_length * 60000));
+            var token_generated = new Date(token_payload.when);
+            if (token_generated > maximum_session) {
+                return errorSend(res, 440, {
+                    error: {
+                        status: "Unauthorized",
+                        message: "Token expired"
+                    }
+                });
+            }
         }
         
         // Check token header
@@ -248,15 +233,14 @@ ACL.jwt.decrypt = function () {
         }
 
         // Check token payload
-        if (!token_payload.hasOwnProperty('_key_account')
-            && !token_payload.hasOwnProperty('_su_key')) {
+        if (!token_payload.hasOwnProperty('key_roles')) {
             return errorSend(res, 403, {
                 error: {
                     status: "Unauthorized",
                     message: "Invalid Token"
                 },
                 meta: {
-                    description: "This token isn't associated with any account. ¿haxor?"
+                    description: "This token isn't associated with any role. ¿haxor?"
                 }
             });
         }
@@ -269,24 +253,8 @@ ACL.jwt.decrypt = function () {
             .digest('base64');
 
         // Do we have a valid JW Token?
-        req._su_key = false; // Protect against an injection attack
         if (verification_signature == token_signature) {
-            // Do the thing Zhu Li!
-            if (token_payload._su_key === true) {
-                req._su_key = true;
-                req._key_account = undefined;
-            }
-
-            if (token_payload.hasOwnProperty('_key_account')) {
-                req._key_account = token_payload._key_account;
-                req._su_key = undefined;
-            }
-
-            if (token_payload.hasOwnProperty('_user_id')) {
-                req._user_id = token_payload._user_id;
-            }
-
-            req._key_roles = token_payload._key_roles;
+            req.key_roles = token_payload.key_roles;
             return next();
         } else {
             return errorSend(res, 403, {

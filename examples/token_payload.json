@@ -1,0 +1,4 @@
+{
+    when: new Date(), // Obviously not true json but here to show what value should be here
+    key_roles: ['user']
+}
