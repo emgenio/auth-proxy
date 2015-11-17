@@ -26,7 +26,7 @@ var aquire = function aquire (require, posibilities) {
  * @return {[type]}        [description]
  */
 var csend = function csend (res, status, json, message) {
-    if (config.proxy.json) {
+    if (config.proxy.jsonResponses) {
         res.status(status).json(json);
     } else {
         res.status(status).send(message);

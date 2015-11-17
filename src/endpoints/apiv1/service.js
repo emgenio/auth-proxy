@@ -54,8 +54,6 @@ var registerService = function registerService (req, res) {
     // Unique Service Name
     // Service Role Table
     // Route & Role Map
-    
-
     if (validateRegisterService.validate(req.body).length) {
         return errorSend(res, 400, {
             error: {
@@ -68,13 +66,15 @@ var registerService = function registerService (req, res) {
         })
     }
 
-    var service = req.body.hostname.replace(".", "_");
+    var service = req.body.hostname.replace(/\./g, "_");
     // Parse role table
-    var table = (new require('../../acl')(req.body.roleTable)).getTable();
+    var ACL = require('../../acl');
+    var acl = new ACL(req.body.roleTable)
+    var table = acl.getTables();
 
     storage.set(service, {});
     storage.dotSet(service + '.routeMap', req.body.routeMap);
-    storage.dotSet(service + '.roleTable', table);
+    storage.dotSet(service + '.roleTables', table);
     storage.dotSet(service + '.baseUri', req.body.baseUri);
 
     return validSend(res, 200, {
@@ -100,7 +100,7 @@ var deleteService = function deleteService (req, res) {
     }
 
     storage.set(
-        req.body.hostname.replace(".", "_"),
+        req.body.hostname.replace(/\./g, "_"),
         undefined
     );
 

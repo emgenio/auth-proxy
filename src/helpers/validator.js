@@ -65,7 +65,11 @@ var Validator = function Validator () {
  * @param {[type]} rule_table [description]
  */
 Validator.NewValidator = function NewValidator (rule_table) {
-    return new (Validator.bind(rule_table))();
+    var NV = new Validator();
+    for (var key in rule_table) {
+        NV[key] = rule_table[key];
+    }
+    return NV;
 };
 
 /**
@@ -77,26 +81,27 @@ Validator.prototype.validate =  function validate (object) {
     var errors = [];
     var result = false;
     for (var fieldName in this) {
-        if (fieldName == '_ruleFunctions') {
+        if (fieldName == '_ruleFunctions' ||
+            fieldName == 'validate' ||
+            fieldName == 'addRule') {
             continue;
         }
 
         var rules = this[fieldName];
         for (var ruleName in rules) {
-            if (ruleFunctions.hasOwnProperty(ruleName)) {
+            if (this._ruleFunctions.hasOwnProperty(ruleName)) {
                var context = {
                     parameters: rules[ruleName]
                };
-               var err = ruleFunctions[ruleName].bind(context, fieldName, object[fieldName])();
-               if (err[0] != true) {
-                   errors = errors.concat(err[1]);
+               var err = this._ruleFunctions[ruleName].bind(context, fieldName, object[fieldName])();
+               if (err.length) {
+                   errors = errors.concat(err);
                }
             }
         }
     }
     
-    result = !errors.length;
-    return [result, errors];
+    return errors;
 };
 
 /**

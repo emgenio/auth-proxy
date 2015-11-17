@@ -43,7 +43,7 @@ memory.prototype.dotSet = function dotSet (key, value) {
     if (dotFindArray.length == 1) {
         this.set(key, value);
     } else {
-        var a = dotFindArray.unshift();
+        var a = dotFindArray.splice(0,1);
         var current = this.get(a);
         var key = dotFindArray.join('.');
 
@@ -52,18 +52,18 @@ memory.prototype.dotSet = function dotSet (key, value) {
         }
 
         if (toString.call(current) == '[object Object]' && current.name == 'memory') {
-            return current.dotSet(key, value);
+            return this._store[a].dotSet(key, value);
         } else if (
             toString.call(current) == '[object Object]' 
             || toString.call(current) == '[object Array]') {
-            return current[dotFindArray.join('.')] = value;
+            return this._store[a][dotFindArray.join('.')] = value;
         }
     }
 }
 
 memory.prototype.find = function find (dotFind) {
     var dotFindArray = dotFind.split('.');
-    var current = this.get(dotFindArray.shift());
+    var current = this.get(dotFindArray.splice(0,1));
 
     if (current) {
         if (dotFindArray.length == 0) {

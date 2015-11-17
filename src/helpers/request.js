@@ -1,3 +1,5 @@
+var errorSend = require('./misc').errorSend;
+
 /**
  * Routes traffic through to backends after
  * confirming eligibilbity.
@@ -6,10 +8,9 @@
  * @param  {Function} next [description]
  * @return {[type]}        [description]
  */
-
 var serviceRouter = function serviceRouter(req, res, next) {
     var path = req.path;
-    var host = req.hostname.replace('.', '_');
+    var host = req.hostname.replace(/\./g, '_');
     var serviceData;
     if (!(serviceData = global.storage.get(host))) {
         return next();
@@ -24,8 +25,8 @@ var serviceRouter = function serviceRouter(req, res, next) {
         var baseUri = serviceData.get('baseUri');
         var uriExtract = require('url').parse(baseUri);
         var isSSL = uriExtract.protocol === 'https:';
-        var roles = serviceData.get('roleTable');
-        var acl = require('../acl').createInstance(roles);
+        var roles = serviceData.get('roleTables');
+        var acl = require('../acl').createInstance(roles[0], roles[1]);
 
 
         return acl.allow(role)(req, res,
@@ -42,7 +43,7 @@ var serviceRouter = function serviceRouter(req, res, next) {
  * @param  {string} chunk   Chunk of request body data
  * @return {void}
  */
-var pipeReq = function (request, chunk) {
+var pipeReq = function pipeReq (request, chunk) {
     request.rawBody += chunk;
 }
 
@@ -52,7 +53,7 @@ var pipeReq = function (request, chunk) {
  * @param  {string} chunk    Chunk of response data
  * @return {void}
  */
-var pipeRes = function (response, chunk) {
+var pipeRes = function pipeRes (response, chunk) {
     response.write(chunk);
 }
 
@@ -73,8 +74,14 @@ var forwardResponse = function forwardResponse (proxyResponse, backendResponse) 
  * @param  {string|obj} err Error to log
  * @return {void}
  */
-var handleError = function (err) {
-    log.warn('Failed to process a request: ' + err);
+var handleError = function handleError (res, err) {
+    global.log.warn('[WARN] Failed to process a request: ' + err);
+    return errorSend(res, 500, {
+        error: {
+            status: 'Server Error',
+            message: err
+        }
+    });
 }
 
 
@@ -92,22 +99,27 @@ var makeRequest = function makeRequest (req, res, destHost, destPort, isSSL) {
     if (isSSL) {
         var request = require('https').request;
         var protocol = 'https:';
+        var defaultPort = 443;
     } else {
         var request = require('http').request;
         var protocol = 'http:';
+        var defaultPort = 80;
     }
 
+    if (req.headers.hasOwnProperty('x-override-host')) {
+        req.headers.host = req.headers["x-override-host"];
+    }
     
     var options = {
         hostname: destHost,
-        port: destPort || 80, // Actually handled by node for us either way
+        port: destPort || defaultPort, // Actually handled by node for us either way
         method: req.method,
         path: req.path,
         headers: req.headers,
         protocol: protocol
     };
     clientReq = request(options, forwardResponse.bind(this, res));
-    clientReq.on('error', handleError);
+    clientReq.on('error', handleError.bind(this, res));
     clientReq.write(req.rawBody);
     clientReq.end();
 };
@@ -123,7 +135,7 @@ module.exports = {
      * @param  {Function} next Next Express middleware in stack
      * @return {void}
      */
-    rawBody: function (req, res, next) {
+    rawBody: function rawBody (req, res, next) {
         req.rawBody = "";
         req.on('data', pipeReq.bind(this, req));
         next();
@@ -134,7 +146,7 @@ module.exports = {
      * @param  {string} route
      * @return {boolean}
      */
-    routeRemover: function (route) {
+    routeRemover: function routeRemover (route) {
         for (var i = 0, len = this.stack.length; i < len; ++i) {
             if (this.stack[i].route == route) {
                 this.stack.splice(i, 1);

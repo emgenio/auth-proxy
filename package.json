@@ -5,7 +5,7 @@
     "type" : "git", 
     "url" : "https://github.com/emgenio/auth-proxy.git"
   },
-  "version": "0.0.1-rc3",
+  "version": "0.0.1-rc4",
   "description": "",
   "main": "entrypoint.js",
   "scripts": {

@@ -2,7 +2,7 @@ proxy:
     port: 3301 # Port to listen on
 
     storage: memory # Type of storage engine to use
-    jsonErrors: true # Return json Errors?
+    jsonResponses: true # Return json responses?
     token:
         usesHeader: true # Whether to look in the header for token
         header: X-Auth # Header the token is passed through
@@ -15,4 +15,5 @@ proxy:
         allowedHosts: # Hosts the api listens to
          - authproxy.emgen.io # Generic Example
          - "192.168.99.100" # default boot2docker ip
+         - "localhost" # Testing locally
         testMode: false # Whether test endpoints should be enabled

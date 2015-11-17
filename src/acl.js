@@ -70,9 +70,10 @@ var ACL = function (acl_table) {
  * @param  {[type]} parsed_table [description]
  * @return {[type]}              [description]
  */
-ACL.createInstance = function (parsed_table) {
+ACL.createInstance = function (role_table, acl_table) {
     var instance = new ACL();
-    instance._role_table = parsed_table;
+    instance._role_table = role_table;
+    instance._acl_table = acl_table;
     return instance;
 }
 
@@ -80,8 +81,8 @@ ACL.createInstance = function (parsed_table) {
  * [getTable description]
  * @return {[type]} [description]
  */
-ACL.prototype.getTable = function getTable() {
-    return this._role_table;
+ACL.prototype.getTables = function getTable() {
+    return [this._role_table, this._acl_table];
 }
 
 
