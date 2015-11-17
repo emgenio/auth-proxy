@@ -1,5 +1,6 @@
 var main_router = require('express').Router({mergeParams: true});
 var router = require('express').Router();
+var config = global.config;
 
 main_router.use('/service', require('./service')());
 

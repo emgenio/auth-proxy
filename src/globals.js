@@ -4,6 +4,7 @@ global.log = require('loglevel');
 
 // Setup global config
 global.config = require('./config');
-
+var storage = require('./storage');
 // Setup global memory storage
-global.storage = new require('./storage')();
+var m = new storage();
+global.storage = m;

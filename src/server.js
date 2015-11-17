@@ -1,5 +1,5 @@
 require('./version');
-require("./globals");
+require('./globals');
 
 var express = require("express");
 var endpoints = require("./endpoints/module.js");

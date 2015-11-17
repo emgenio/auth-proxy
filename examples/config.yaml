@@ -13,5 +13,6 @@ proxy:
     api:
         enabled: true # Whether the service and endpoint registration api should be enabled
         allowedHosts: # Hosts the api listens to
-         - authproxy.emgen.io
+         - authproxy.emgen.io # Generic Example
+         - "192.168.99.100" # default boot2docker ip
         testMode: false # Whether test endpoints should be enabled

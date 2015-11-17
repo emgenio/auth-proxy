@@ -3,6 +3,7 @@
  * when passed a simple role table.
  */
 var errorSend = require('./helpers/misc').errorSend;
+var config = global.config;
 
 /**
  * Parses the acl object into a two dimentional matrix for easier parsing

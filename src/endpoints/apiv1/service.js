@@ -1,6 +1,7 @@
 var Validator = require('../../helpers/validator');
 var errorSend = require('../../helpers/misc').errorSend;
 var validSend = require('../../helpers/misc').validSend;
+var storage = global.storage;
 
 // Create a validator for registering services
 var validateRegisterService = Validator.NewValidator({
@@ -70,7 +71,6 @@ var registerService = function registerService (req, res) {
     var service = req.body.hostname.replace(".", "_");
     // Parse role table
     var table = (new require('../../acl')(req.body.roleTable)).getTable();
-
 
     storage.set(service, {});
     storage.dotSet(service + '.routeMap', req.body.routeMap);

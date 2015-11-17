@@ -1,3 +1,5 @@
+var config = global.config;
+
 /**
  * Returns a successful require from the first module
  * which exists in a list of possible modules.

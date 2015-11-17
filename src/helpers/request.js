@@ -6,10 +6,16 @@
  * @param  {Function} next [description]
  * @return {[type]}        [description]
  */
+
 var serviceRouter = function serviceRouter(req, res, next) {
-    var path = req.route.path;
+    var path = req.path;
     var host = req.hostname.replace('.', '_');
-    var serviceData = storage.get(host);
+    var serviceData;
+    if (!(serviceData = global.storage.get(host))) {
+        return next();
+    }
+
+
     var routeMap = serviceData.get('routeMap');
     var role;
 
