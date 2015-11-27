@@ -30,7 +30,7 @@ var serviceRouter = function serviceRouter(req, res, next) {
 
 
         return acl.allow(role)(req, res,
-            makeRequest.bind(this, req, res, uriExtract.host, uriExtract.port, isSSL)
+            makeRequest.bind(this, req, res, uriExtract.hostname, uriExtract.port, isSSL)
         );
     }
 
