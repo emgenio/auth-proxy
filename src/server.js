@@ -7,11 +7,20 @@ var app = express();
 var router = express.Router();
 var bodyParser = require('body-parser');
 var rawBodySaver = require('./helpers/request').rawBody;
+var errorSend = require('./helpers/misc').errorSend;
 
 // Add a global raw body saving middleware
 app.use(rawBodySaver);
 // Add a global JSON parsing middleware
 app.use(bodyParser.json());
+app.use(function(err, req, res, next) {
+    // Handle error 400 raised from body-parser
+    if (err && err.status == 400) {
+        errorSend(res, 400, {error: {code: 400, message: 'Bad Request: Malformed JSON'}});
+    } else {
+        next(err);
+    }
+});
 app.use(require('./acl').jwt.decrypt());
 
 // Loop through endpoints and add them to the router.
