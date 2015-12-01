@@ -57,5 +57,76 @@ describe("ACL test suites", function() {
             assert.equal(true, acl_instance.hasClearance(role_chain, "user"));
         });
     });
+
+    describe("allow request middleware", function() {
+        var supertest = require('supertest');
+        var app = require('express')();
+        var expected = "requires_token: false"
+
+        var role = "guest"
+        var role_table = require("./helpers/roleTable.js");
+        app.get("/", function(req, res) {
+            var acl = new ACL(role_table);
+            acl.allow(role)(req, res, function() {
+                res.status(200).send(expected);
+            });
+        });
+
+        app.get("/missing_api_key", function(req, res) {
+            var acl = new ACL(role_table);
+            acl._acl_table.guest.requires_token = true;
+            req.key_roles = false;
+            acl.allow(role)(req, res, function() {
+                res.status(200).send(expected);
+            });
+        });
+
+        var refused_role = "no_role"
+        app.get("/api_key_unauthorized", function(req, res) {
+            var acl = new ACL(role_table);
+            acl._acl_table.guest.requires_token = true;
+            req.key_roles = refused_role;
+            acl.allow(role)(req, res, function() {
+                res.status(200).send(expected);
+            });
+        });
+
+        app.get("/all_shiny", function(req, res) {
+            var acl = new ACL(role_table);
+            acl._acl_table.guest.requires_token = true;
+            req.key_roles = role;
+            acl.allow(role)(req, res, function() {
+                res.status(200).send(expected);
+            });
+        });
+
+        it("should pass if token required present and set to false", function(done) {
+            supertest(app)
+                .get("/")
+                .expect(200, expected, done);
+        });
+
+        it("should not pass due to lack of authorization", function(done) {
+            supertest(app)
+                .get("/missing_api_key")
+                .expect(403, {
+                    error: { status: 'Unauthorized', reason: 'API Key Missing'}
+                }, done);
+        });
+
+        it("should not pass due to the non-authorized API key", function(done) {
+            supertest(app)
+                .get("/api_key_unauthorized")
+                .expect(403, {
+                    error: { status: 'Unauthorized', reason: 'Not authorized to access this endpoint' },
+                    meta: { details: 'Endpoint requires ' + role + ' permission', authorized_for: refused_role }
+                }, done);
+        });
+
+        it("should be all shiny :)", function(done) {
+            supertest(app)
+                .get("/all_shiny")
+                .expect(200, expected, done);
+        });
+    });
 });
-    
