@@ -123,6 +123,17 @@ ACL.prototype.hasClearance = function (role_chain, role) {
 ACL.prototype.allow = function (role) {
     var self = this; // Give access to the ACL's context
     return (req, res, next) => {
+
+        // poor service registration
+        if (!self._acl_table.hasOwnProperty(role)) {
+            return errorSend(res, 403, {
+                error: {
+                    status: 'Unauthorized',
+                    reason: 'Cannot process the request'
+                }
+            });
+        }
+
         // If in the ACL Table, our role doens't require a token
         // then lets just let the user pass
         if (self._acl_table[role].hasOwnProperty('requires_token')) {

@@ -72,6 +72,13 @@ describe("ACL test suites", function() {
             });
         });
 
+        app.get("/not_property_of_acl_table", function(req, res) {
+            var acl = new ACL(role_table);
+            acl.allow("not_property")(req, res, function() {
+                res.status(200).send(expected);
+            });
+        });
+
         app.get("/missing_api_key", function(req, res) {
             var acl = new ACL(role_table);
             acl._acl_table.guest.requires_token = true;
@@ -98,6 +105,14 @@ describe("ACL test suites", function() {
             acl.allow(role)(req, res, function() {
                 res.status(200).send(expected);
             });
+        });
+
+        it("should pass if token required present and set to false", function(done) {
+            supertest(app)
+                .get("/not_property_of_acl_table")
+                .expect(403, {
+                    error: { status: 'Unauthorized', reason: 'Cannot process the request'}
+                }, done);
         });
 
         it("should pass if token required present and set to false", function(done) {
