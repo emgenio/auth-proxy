@@ -92,22 +92,21 @@ ACL.prototype.getTables = function getTable() {
  * can has clearance for a user level operation do:
  *    ACL.hasClearance('product_read', 'user');
  */
-ACL.prototype.hasClearance = function (roles_to_test, role) {
-    if (!Array.isArray(roles_to_test)) {
-        if (roles_to_test == role) {
-            return true;
-        } else {
-            return this._role_table[roles_to_test].indexOf(role) > -1;
-        }
-    } else {
-        for(var key in roles_to_test) {
-            var i_role = roles_to_test[key];
+ACL.prototype.hasClearance = function (role_chain, role) {
+    if (Array.isArray(role_chain)) {
+        for(var key in role_chain) {
+            var i_role = role_chain[key];
             if (this.hasClearance(i_role, role)) {
                 return true;
             }
         }
+    } else {
+        if (role_chain == role) {
+            return true;
+        } else if (this._role_table.hasOwnProperty(role_chain)) {
+            return this._role_table[role_chain].indexOf(role) > -1;
+        }
     }
-
     return false;
 }
 
