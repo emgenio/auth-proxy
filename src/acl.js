@@ -4,7 +4,7 @@
  */
 var errorSend = require('./helpers/misc').errorSend;
 var config = global.config;
-
+var _ = require('underscore')._;
 /**
  * Parses the acl object into a two dimentional matrix for easier parsing
  */
@@ -18,14 +18,18 @@ var parse_table = function (acl_table, role) {
     } else if (!acl_table[role].inherits || acl_table[role].inherits.length == 0) {
         return [];
     }
-    
     var roles = acl_table[role].inherits;
+
+    var idx;
+    while((idx = roles.indexOf(role)) != -1) {
+        roles.splice(idx, 1);
+    }
     for(var role_index in roles) {
         var s_role = roles[role_index];
         roles = roles.concat(parse_table(acl_table, s_role));
     }
 
-    return roles;
+    return _.uniq(roles);
 };
 
 /**
@@ -92,19 +96,20 @@ ACL.prototype.getTables = function getTable() {
  * can has clearance for a user level operation do:
  *    ACL.hasClearance('product_read', 'user');
  */
-ACL.prototype.hasClearance = function (roles_to_test, role) {
-    if (!Array.isArray(roles_to_test)) {
-        if (roles_to_test == role) {
-            return true;
-        } else {
-            return this._role_table[roles_to_test].indexOf(role) > -1;
-        }
-    } else {
-        for(var key in roles_to_test) {
-            var i_role = roles_to_test[key];
+ACL.prototype.hasClearance = function (role_chain, role) {
+    if (Array.isArray(role_chain)) {
+        // return true wether role_chain contains role
+        for(var key in role_chain) {
+            var i_role = role_chain[key];
             if (this.hasClearance(i_role, role)) {
                 return true;
             }
+        }
+    } else {
+        if (role_chain == role) {
+            return true;
+        } else if (this._role_table.hasOwnProperty(role_chain))  {
+            return this._role_table[role_chain].indexOf(role) > -1;
         }
     }
 
@@ -118,6 +123,17 @@ ACL.prototype.hasClearance = function (roles_to_test, role) {
 ACL.prototype.allow = function (role) {
     var self = this; // Give access to the ACL's context
     return (req, res, next) => {
+
+        // poor service registration
+        if (!self._acl_table.hasOwnProperty(role)) {
+            return errorSend(res, 403, {
+                error: {
+                    status: 'Unauthorized',
+                    reason: 'Cannot process the request'
+                }
+            });
+        }
+
         // If in the ACL Table, our role doens't require a token
         // then lets just let the user pass
         if (self._acl_table[role].hasOwnProperty('requires_token')) {
